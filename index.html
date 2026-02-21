@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Inventario</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>Inventario</h1>
+    <div class="actions">
+      <button id="btnExportCSV" class="btn secondary" title="Exportar reportes a CSV">Exportar CSV</button>
+      <button id="btnBackup" class="btn secondary" title="Exportar respaldo JSON">Respaldo</button>
+      <button id="btnRestore" class="btn secondary" title="Importar respaldo JSON">Restaurar</button>
+      <input type="file" id="restoreFile" accept="application/json" hidden />
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-target="#dashboard">Dashboard</button>
+    <button class="tab" data-target="#productos">Productos</button>
+    <button class="tab" data-target="#movimientos">Movimientos</button>
+    <button class="tab" data-target="#reportes">Reportes</button>
+  </nav>
+
+  <main class="tab-content">
+    <!-- Dashboard -->
+    <section id="dashboard" class="panel active">
+      <div class="cards">
+        <div class="card">
+          <div class="card-title">Total Productos</div>
+          <div id="metricTotalProductos" class="metric">0</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Stock Total</div>
+          <div id="metricStockTotal" class="metric">0</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Valorizado (costo)</div>
+          <div id="metricValorizado" class="metric">$0</div>
+        </div>
+        <div class="card warn">
+          <div class="card-title">Bajo Mínimo</div>
+          <div id="metricBajoMinimo" class="metric">0</div>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <h2>Productos con stock bajo mínimo</h2>
+        <table class="table" id="tablaBajoMinimo">
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>Nombre</th>
+              <th>Stock</th>
+              <th>Mínimo</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Productos -->
+    <section id="productos" class="panel">
+      <div class="toolbar">
+        <button id="btnNuevoProducto" class="btn primary">Nuevo Producto</button>
+        <input id="buscarProducto" type="search" placeholder="Buscar por SKU o nombre" />
+        <select id="filtroCategoria">
+          <option value="">Todas las categorías</option>
+        </select>
+      </div>
+
+      <table class="table" id="tablaProductos">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Nombre</th>
+            <th>Categoría</th>
+            <th>Unidad</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Mínimo</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- Movimientos -->
+    <section id="movimientos" class="panel">
+      <div class="toolbar">
+        <button id="btnNuevoMovimiento" class="btn primary">Registrar Movimiento</button>
+        <input id="buscarMovimiento" type="search" placeholder="Buscar por SKU o documento" />
+        <select id="filtroTipoMovimiento">
+          <option value="">Todos</option>
+          <option value="ENTRADA">Entrada</option>
+          <option value="SALIDA">Salida</option>
+          <option value="AJUSTE+">Ajuste (+)</option>
+          <option value="AJUSTE-">Ajuste (-)</option>
+        </select>
+      </div>
+
+      <table class="table" id="tablaMovimientos">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Tipo</th>
+            <th>SKU</th>
+            <th>Nombre</th>
+            <th>Cantidad</th>
+            <th>Costo/Precio</th>
+            <th>Documento</th>
+            <th>Nota</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- Reportes -->
+    <section id="reportes" class="panel">
+      <div class="reportes-grid">
+        <div class="panel-section">
+          <h2>Kardex por producto</h2>
+          <div class="inline">
+            <input id="kardexSKU" type="search" placeholder="Ingresa SKU" />
+            <button id="btnVerKardex" class="btn">Ver</button>
+          </div>
+          <table class="table" id="tablaKardex">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Entrada</th>
+                <th>Salida</th>
+                <th>Saldo</th>
+                <th>Costo Prom.</th>
+                <th>Documento</th>
+                <th>Nota</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="panel-section">
+          <h2>Stock valorizado (costo promedio)</h2>
+          <table class="table" id="tablaValorizado">
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Nombre</th>
+                <th>Stock</th>
+                <th>Costo Prom.</th>
+                <th>Valorizado</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal Producto -->
+  <dialog id="modalProducto" class="modal">
+    <form id="formProducto" method="dialog">
+      <h3 id="modalProductoTitulo">Nuevo Producto</h3>
+      <div class="grid-2">
+        <label>
+          SKU
+          <input name="sku" id="prodSku" required maxlength="50" />
+        </label>
+        <label>
+          Nombre
+          <input name="nombre" id="prodNombre" required maxlength="120" />
+        </label>
+        <label>
+          Categoría
+          <input name="categoria" id="prodCategoria" maxlength="80" />
+        </label>
+        <label>
+          Unidad
+          <input name="unidad" id="prodUnidad" placeholder="Ej: un, kg, lt" maxlength="10" />
+        </label>
+        <label>
+          Costo (prom.)
+          <input name="costo" id="prodCosto" type="number" step="0.0001" min="0" value="0" />
+        </label>
+        <label>
+          Precio
+          <input name="precio" id="prodPrecio" type="number" step="0.0001" min="0" value="0" />
+        </label>
+        <label>
+          Stock mínimo
+          <input name="minimo" id="prodMinimo" type="number" step="0.0001" min="0" value="0" />
+        </label>
+        <label>
+          Estado
+          <select name="activo" id="prodActivo">
+            <option value="true">Activo</option>
+            <option value="false">Inactivo</option>
+          </select>
+        </label>
+      </div>
+
+      <details>
+        <summary>Atributos personalizados</summary>
+        <div id="customAttrs" class="custom-attrs"></div>
+        <div class="inline">
+          <input id="newAttrKey" placeholder="Nombre del atributo" />
+          <input id="newAttrValue" placeholder="Valor" />
+          <button id="btnAddAttr" class="btn" type="button">Agregar</button>
+        </div>
+      </details>
+
+      <menu class="modal-actions">
+        <button value="cancel" class="btn">Cancelar</button>
+        <button id="btnGuardarProducto" value="confirm" class="btn primary">Guardar</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <!-- Modal Movimiento -->
+  <dialog id="modalMovimiento" class="modal">
+    <form id="formMovimiento" method="dialog">
+      <h3>Registrar Movimiento</h3>
+      <div class="grid-2">
+        <label>
+          Tipo
+          <select name="tipo" id="movTipo" required>
+            <option value="ENTRADA">Entrada</option>
+            <option value="SALIDA">Salida</option>
+            <option value="AJUSTE+">Ajuste (+)</option>
+            <option value="AJUSTE-">Ajuste (-)</option>
+          </select>
+        </label>
+        <label>
+          Fecha
+          <input name="fecha" id="movFecha" type="date" required />
+        </label>
+        <label>
+          SKU
+          <input name="sku" id="movSku" list="skuList" required />
+          <datalist id="skuList"></datalist>
+        </label>
+        <label>
+          Cantidad
+          <input name="cantidad" id="movCantidad" type="number" step="0.0001" min="0.0001" required />
+        </label>
+        <label>
+          Costo unitario (Entradas/Ajuste+)
+          <input name="costo" id="movCosto" type="number" step="0.0001" min="0" />
+        </label>
+        <label>
+          Precio unitario (Salidas)
+          <input name="precio" id="movPrecio" type="number" step="0.0001" min="0" />
+        </label>
+        <label>
+          Documento (ref.)
+          <input name="doc" id="movDoc" maxlength="60" placeholder="Factura/Boleta/OC" />
+        </label>
+        <label>
+          Nota
+          <input name="nota" id="movNota" maxlength="180" />
+        </label>
+      </div>
+      <menu class="modal-actions">
+        <button value="cancel" class="btn">Cancelar</button>
+        <button id="btnGuardarMovimiento" value="confirm" class="btn primary">Guardar</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
