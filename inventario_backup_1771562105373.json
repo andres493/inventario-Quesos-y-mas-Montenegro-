@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "at": "2026-02-20T04:35:05.340Z",
+  "datos": {
+    "productos": [
+      {
+        "id": "4t9em82p5csmluebpqv",
+        "sku": "01",
+        "nombre": "quesos",
+        "categoria": "",
+        "unidad": "un",
+        "precio": 12000,
+        "costo": 10000,
+        "minimo": 3,
+        "activo": true,
+        "attrs": {}
+      }
+    ],
+    "movimientos": [],
+    "meta": {}
+  }
+}
